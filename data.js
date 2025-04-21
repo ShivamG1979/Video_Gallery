@@ -38,7 +38,7 @@ const videoCategories = [
       { title: "Federal Bank - 50 years in Kolkata <br> Editor & Colorist", thumbnail: "./images/Testimonials/FB 50 YRS IN KOLKATA.jpg", url: "https://www.youtube.com/playlist?list=PLfdZCcgmTH7z-3Ov-C3uFagvof0Ed4FE8" },
       { title: "Federal Bank | Employee Stories  Chennai <br> Editor & Colorist", thumbnail: "./images/Testimonials/FEDERAL BANK_EMPLOYEE.jpg", url: "https://youtu.be/kgub2qH6UDY" },
       { title: "Netskope - Mastek <br> Editor & Colorist", thumbnail: "./images/Testimonials/NETSKOPE.jpg", url: "https://youtu.be/c4hpf42ZM9E" },
-      { title: "Character Sketch-Gopal Ratna Awards | Ministry of Fisheries, Animal Husbandry and Dairying <br> Editor & Colorist", thumbnail: "./images/Testimonials/CHARACTER SKETCH.jpg", url: "https://youtu.be/nE_RAw-p-9s" },
+      { title: "Character Sketch-Gopal Ratna Awards  Ministry of Fisheries, Animal Husbandry and Dairying <br> Editor & Colorist", thumbnail: "./images/Testimonials/CHARACTER SKETCH.jpg", url: "https://youtu.be/nE_RAw-p-9s" },
     ]
   },
   {
