@@ -93,8 +93,6 @@ function createVideoModal() {
   videoModal.className = "modal fade";
   videoModal.id = "videoModal";
   videoModal.tabIndex = "-1";
-  // Remove aria-hidden attribute from modal container
-  // videoModal.setAttribute("aria-hidden", "true"); - removed
   
   videoModal.innerHTML = `
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -121,7 +119,6 @@ function createVideoModal() {
     document.getElementById("videoFrame").src = '';
     
     // Move focus to a safe element after modal closes
-    // This prevents focus from staying on the close button while the modal has aria-hidden
     setTimeout(() => {
       document.querySelector("body").focus();
     }, 50);
@@ -145,7 +142,6 @@ function createVideoModal() {
     }, 10);
   };
 }
-
 
 // Enhanced YouTube video ID extraction
 function getYoutubeVideoId(url) {
@@ -275,8 +271,19 @@ document.addEventListener("DOMContentLoaded", () => {
   fontLink.rel = 'stylesheet';
   document.head.appendChild(fontLink);
   
-  // Apply Poppins font to all elements
-  document.body.style.fontFamily = "'Poppins', sans-serif";
+  // Apply Poppins font to text elements only, excluding Font Awesome icons
+  const styleElement = document.createElement('style');
+  styleElement.textContent = `
+    body, h1, h2, h3, h4, h5, h6, p, span, div, button, input, select, textarea, label, a {
+      font-family: 'Poppins', sans-serif !important;
+    }
+    
+    /* Preserve Font Awesome icons */
+    .fas, .fab, .far, .fa {
+      font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', 'FontAwesome' !important;
+    }
+  `;
+  document.head.appendChild(styleElement);
 
   // Add container for tabs for better mobile layout
   const tabWrapper = document.createElement("div");
