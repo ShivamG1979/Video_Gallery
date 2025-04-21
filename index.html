@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A.S.ARVIND</title>
+    <link rel="icon" href="./images/Logo-3.jpeg" type="image/png" />
+    <!-- Bootstrap CSS -->
+
+    <link rel="stylesheet" href="./css/bootstrap.min.css" />
+
+    <!-- Font Awesome Icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Animation Library --> 
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      rel="stylesheet"
+    />
+    <!-- AOS Animation Library -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+      rel="stylesheet"
+    />
+
+    <!-- Add minimal inline styles for cursor -->
+    <style>
+      /* Custom Cursors - minimal styling that can't be done with Bootstrap */
+      #cursor-outer {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      #cursor-outer {
+        background-color: rgb(242, 50, 50);
+        width: 20px;
+        height: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease,
+          border 0.3s ease;
+      }
+
+      body:hover #cursor-outer,
+      body:hover #cursor-dot {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="text-light" style="background-color:black">
+    <!-- Custom Cursor Elements -->
+    <div id="cursor-outer"></div>
+    <div id="cursor-dot"></div>
+
+    <!-- Preloader -->
+    <div
+      id="preloader"
+      class="position-fixed top-0 start-0 w-100 h-100 bg-black d-flex justify-content-center align-items-center"
+      style="z-index: 9999"
+    >
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Particles Background -->
+    <div
+      id="particles-js"
+      class="position-fixed w-100 h-100 top-0 start-0"
+      style="z-index: 0; pointer-events: none"
+    ></div>
+    <!--header------->
+    <header class="bg-black sticky-top">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <img
+              src="./images/Logo-4.jpeg"
+              alt="A S Aravind"
+              style="width: auto; height: 5rem"
+            />
+          </div>
+    
+          <nav>
+            <ul class="nav">
+              <li class="nav-item">
+                <a
+                  href="#footer"
+                  class="text-white fs-5 px-3 d-flex align-items-center text-decoration-none"
+                >
+                  <p>Contact</p>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+    
+
+    <div id="gallery-section" class="container py-5">
+      <ul
+        class="nav nav-pills mb-5 justify-content-center flex-wrap"
+        id="videoTabs"
+        data-aos="fade-up"
+        data-aos-delay="200"
+      >
+        <!-- Category tabs will be injected here by JavaScript -->
+      </ul>
+
+      <div class="tab-content" id="videoTabContent">
+        <!-- Category content will be injected here by JavaScript -->
+      </div>
+    </div>
+
+    <footer id="footer" class="mt-5 py-5 bg-black">
+      <div class="container">
+        <div class="row g-4 justify-content-between">
+          <div class="col-lg-5" data-aos="fade-up">
+            <div class="d-flex align-items-center">
+              <img
+                src="./images/Logo-4.jpeg"
+                alt="A S Aravind"
+                style="width: auto; height: 4rem"
+              />
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+              <!-- Facebook -->
+              <a
+                href="https://www.facebook.com/aravind.s.1671"
+                class="btn btn-outline-light rounded-circle"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <i class="fab fa-facebook-f"></i>
+              </a>
+
+              <!-- Instagram -->
+              <a
+                href="https://www.instagram.com/a_s_aravind/"
+                class="btn btn-outline-light rounded-circle"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <i class="fab fa-instagram"></i>
+              </a>
+
+              <!-- WhatsApp -->
+              <a
+                href="https://api.whatsapp.com/send?phone=918547608324"
+                class="btn btn-outline-light rounded-circle"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <i class="fab fa-whatsapp"></i>
+              </a>
+
+              <!-- Mail -->
+              <a
+              href="mailto:edit.asaravind@gmail.com"
+              class="btn btn-outline-light rounded-circle"
+              style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"
+              target="_blank"
+            >
+              <i class="fas fa-envelope"></i>
+            </a>
+            
+            </div>
+          </div>
+
+          <div class="col-lg-5" data-aos="fade-up" data-aos-delay="200">
+            <h5 class="mb-4">Contact</h5>
+            <ul class="list-unstyled text-white">
+              <!-- <li class="mb-3 d-flex align-items-center">
+              <i class="fas fa-map-marker-alt me-3 text-danger"></i>
+              <span>123 Creative Street, City, Country</span>
+            </li> -->
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-phone me-3 text-white"></i>
+                <span> +918547608324 </span>
+              </li>
+              <li class="mb-3 d-flex align-items-center">
+                <i class="fas fa-envelope me-3 text-white"></i>
+                <span>edit.asaravind@gmail.com</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Back to top button -->
+    <button
+      id="back-to-top"
+      class="btn btn-light rounded-circle position-fixed bottom-0 end-0 m-4 opacity-0"
+      style="width: 50px; height: 50px; z-index: 99"
+    >
+      <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="./js/bootstrap.bundle.min.js"></script>
+
+    <!-- AOS Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <!-- Particles.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Your custom scripts -->
+    <script src="data.js"></script>
+
+    <script src="gallery.js"></script>
+
+    <script src="custom.js"></script>
+  </body>
+</html>
