@@ -4,23 +4,33 @@ const videoTabContent = document.getElementById("videoTabContent");
 
 // Create and append video tabs and content
 function createVideoGallery() {
-  // Add wrapper class (no longer mobile-specific)
-  videoTabs.classList.add("tabs-wrapper");
-
-  const galleryTitle = document.createElement("div");
-  galleryTitle.className = "container-fluid mb-2";
-  videoTabs.parentNode.insertBefore(galleryTitle, videoTabs);
+  // Make tabs responsive - horizontal on desktop, column on mobile
+  videoTabs.classList.add("nav", "nav-pills");
+  
+  // Use flexbox properties that change with breakpoints
+  videoTabs.classList.add("flex-column", "flex-md-row"); // Column on mobile, row on desktop
+  videoTabs.classList.add("gap-2", "mb-3");
+  
+  // Only enable horizontal scrolling on desktop
+  videoTabs.classList.add("overflow-md-auto");
+  videoTabs.style.cssText = "scrollbar-width: none; -ms-overflow-style: none;";
+  
+  // Create video modal for popup playback
+  createVideoModal();
 
   videoCategories.forEach((category, categoryIndex) => {
     // Create tab nav item
     const tabItem = document.createElement("li");
-    tabItem.className = "nav-item";
+    tabItem.className = "nav-item"; // Remove flex-shrink-0 to allow full width on mobile
     tabItem.innerHTML = `
-      <button class="nav-link ${categoryIndex === 0 ? "active" : ""} mx-1 mb-2 border-0 rounded-pill" 
+      <button class="nav-link ${categoryIndex === 0 ? "active" : ""} mb-2 rounded-pill w-100" 
               id="tab-${categoryIndex}" 
               data-bs-toggle="pill" 
               data-bs-target="#content-${categoryIndex}" 
-              type="button">
+              type="button"
+              style="background-color: ${categoryIndex === 0 ? 'white' : 'transparent'}; 
+                     color: ${categoryIndex === 0 ? 'black' : 'white'}; 
+                     border: 1px solid white;">
               <span>${category.name}</span>
       </button>
     `;
@@ -33,31 +43,35 @@ function createVideoGallery() {
 
     contentDiv.innerHTML = `
       <div class="mt-2">
-        <h1 class="category-title mb-3 ps-2">
-          <span class="text-light">${category.name}</span>
-        </h1>
+        <h1 class="mb-3 ps-2 fs-2 text-light fw-bold">${category.name}</h1>
         <div class="row g-2 g-md-3 g-lg-4 mt-3">
           ${category.videos
             .map(
               (video, i) => `
             <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="${50 * (i % 6)}">
-              <div class="card h-100 border-0 bg-dark text-light video-card mx-auto mx-sm-2 no-shadow" 
+              <div class="card h-100 border-0 bg-dark text-light rounded-3 mx-auto mx-sm-2 video-item" 
                    data-video-url="${video.url}" 
-                   data-video-title="${video.title}">
+                   data-video-title="${video.title}"
+                   style="cursor: pointer; transition: transform 0.3s ease;">
                 <div class="position-relative rounded overflow-hidden">
-                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3C/svg%3E" 
-                       data-src="${video.thumbnail}" 
-                       class="card-img-top rounded lazy-image" 
-                       alt="${video.title}">
+                  <img src="${video.thumbnail}" 
+                       class="card-img-top" 
+                       alt="${video.title}"
+                       style="aspect-ratio: 16/9; object-fit: cover;">
                  
-                  <div class="card-overlay">
-                    <a href="${video.url}" target="_blank" class="play-button">
+                  <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center overlay-element"
+                       style="background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0) 100%); 
+                              opacity: 0; 
+                              transition: opacity 0.3s ease;">
+                    <button class="btn border-0 bg-transparent text-white fs-1"
+                            style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); 
+                                   transition: transform 0.3s ease;"
+                            onclick="playVideo('${video.url}', '${video.title.replace(/'/g, "\\'")}')">
                       <i class="fas fa-play-circle"></i>
-                    </a>
-                    <h5 class="hover-title">${video.title}</h5>
+                    </button>
+                    <h5 class="text-center mt-2">${video.title}</h5>
                   </div>
                 </div>
-                
               </div>
             </div>
           `
@@ -70,362 +84,221 @@ function createVideoGallery() {
     videoTabContent.appendChild(contentDiv);
   });
 
-  setupThumbnailPreview();
-  addUpdatedStyles();
-  initLazyLoading();
+  setupCardInteractions();
 }
 
-function addUpdatedStyles() {
-  const styleElement = document.createElement("style");
-  styleElement.textContent = `
-    /* Add Poppins font to all elements */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-    
-    body, button, input, h1, h2, h3, h4, h5, h6, p, span, a, div {
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    /* Base styles */
-    body {
-      background-color: black;
-      color: white;
-      overflow-x: hidden;
-      font-family: 'Poppins', sans-serif; 
-    }
-    
-     /* Fixed header styles */
-    header.sticky-top {
-      position: sticky;
-      top: 0;
-      z-index: 1030; /* Higher z-index to keep header above content */
-      background-color: black;
-    }
-    
-    /* Add padding to content to prevent overlap with header */
-    #gallery-section {
-      padding-top: 6rem; /* Adjust this value based on your header height */
-    }
-    
-    /* Adjust category title position */
-    .category-title {
-      margin-top: 1rem;
-    }
-    
-    /* Make sure tabs don't get hidden under header */
-    #videoTabs {
-      position: relative;
-      z-index: 10;
-    }
-    /* Tab navigation */
-    .tabs-wrapper {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      padding: 5px 0;
-      margin: 0 -5px;
-      justify-content: flex-start;
-      align-items: center;
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .tabs-wrapper::-webkit-scrollbar {
-      display: none;
-    }
-    
-    .nav-item {
-      margin: 0 3px;
-      flex: 0 0 auto;
-    }
-    
-    .nav-link {
-      background-color: transparent;
-      color: black;
-      padding: 8px 15px !important;
-      font-size: 1rem;
-      border-radius: 50px !important;
-      transition: all 0.2s ease;
-      min-width: 40px;
-      text-align: center;
-      border: 1px solid white !important;
-      color: white;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 400;
-    }
-    
-    .nav-link:hover {
-      color: white !important;
-      background-color: rgba(24, 21, 21, 0.1) !important;
-    }
-    
-    .nav-link.active {
-      background: white !important; 
-      color: black !important; 
-      font-weight: 500;
-    }
-    
-    /* Video cards */
-    .video-card {
-      transition: transform 0.3s ease;
-      border-radius: 8px;
-      font-family: 'Poppins', sans-serif;
-      max-width: 100%;
-    }
-    
-    .video-card:hover, .video-card:active {
-      transform: translateY(-3px);
-    }
-    
-    /* Card images */
-    .card-img-top {
-      aspect-ratio: 16/9;
-      object-fit: cover;
-      height: auto;
-    }
-    
-    /* Lazy loading placeholder style */
-    .lazy-image {
-      transition: opacity 0.3s ease;
-      opacity: 0;
-    }
-    
-    .lazy-image.loaded {
-      opacity: 1;
-    }
-    
-    /* Title overlay */
-    .title-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0) 100%);
-      padding: 30px 10px 10px;
-      border-bottom-left-radius: 6px;
-      border-bottom-right-radius: 6px;
-    }
-    
-    .thumbnail-title {
-      color: white;
-      margin: 0;
-      font-size: 0.9rem;
-      text-align: center;
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      font-weight: 400;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-    }
-    
-    /* Overlay with gradient */
-    .card-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0) 100%);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.3s ease;
-      color: white;
-      opacity: 0;
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .video-card:hover .card-overlay {
-      opacity: 1;
-    }
-    
-    /* Play button */
-    .play-button {
-      color: #fff;
-      opacity: 0.9;
-      transition: transform 0.3s ease;
-      cursor: pointer;
-      z-index: 100;
-      filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.6));
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .play-button:hover {
-      transform: scale(1.2);
-      color: inherit !important;
-      text-decoration: none !important;
-    }
-    
-    /* Video titles */
-    .hover-title {
-      text-align: center;
-      margin-top: 0.5rem;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s ease;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 500;
-    }
-    
-    .video-card:hover .hover-title {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    
-    .card-title {
-      font-size: 0.9rem;
-      line-height: 1.2;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 400;
-    }
-    
-    /* Category title */
-    .category-title {
-      font-size: 2rem;
-      position: relative;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-    }
-    
-    /* Video card active state */
-    .video-card.active .card-overlay {
-      opacity: 1 !important;
-    }
+function createVideoModal() {
+  // Create modal container
+  const videoModal = document.createElement("div");
+  videoModal.className = "modal fade";
+  videoModal.id = "videoModal";
+  videoModal.tabIndex = "-1";
+  // Remove aria-hidden attribute from modal container
+  // videoModal.setAttribute("aria-hidden", "true"); - removed
+  
+  videoModal.innerHTML = `
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark border-0 rounded-3">
+        <div class="modal-header border-0 pb-0">
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="ratio ratio-16x9">
+            <iframe id="videoFrame" src="" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
-  document.head.appendChild(styleElement);
-}
+  document.body.appendChild(videoModal);
 
-function setupThumbnailPreview() {
-  const containers = document.querySelectorAll(".video-card");
+  // Get references to modal elements
+  const modalElement = document.getElementById("videoModal");
+  const closeButton = modalElement.querySelector(".btn-close");
 
-  // Standard desktop hover behavior
-  containers.forEach((container) => {
-    container.addEventListener("mouseenter", () => {
-      container.querySelector(".card-overlay").style.opacity = "1";
-    });
-
-    container.addEventListener("mouseleave", () => {
-      container.querySelector(".card-overlay").style.opacity = "0";
-    });
+  // Handle modal events with accessibility fixes
+  modalElement.addEventListener('hidden.bs.modal', function() {
+    document.getElementById("videoFrame").src = '';
+    
+    // Move focus to a safe element after modal closes
+    // This prevents focus from staying on the close button while the modal has aria-hidden
+    setTimeout(() => {
+      document.querySelector("body").focus();
+    }, 50);
   });
+  
+  // Ensure modal close button doesn't maintain focus when clicked
+  closeButton.addEventListener('click', function() {
+    // Remove focus from the close button before Bootstrap processes the modal closing
+    this.blur();
+  });
+  
+  // Fix for Bootstrap's modal implementation
+  const bootstrapModal = new bootstrap.Modal(modalElement);
+  const originalHide = bootstrapModal.hide;
+  
+  // Monkey patch the hide method to ensure blur happens first
+  bootstrapModal.hide = function() {
+    closeButton.blur();
+    setTimeout(() => {
+      originalHide.call(bootstrapModal);
+    }, 10);
+  };
 }
 
-function initLazyLoading() {
-  // Create intersection observer
-  const lazyImageObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        img.src = img.dataset.src;
-        img.onload = () => {
-          img.classList.add('loaded');
-        };
-        observer.unobserve(img);
+
+// Enhanced YouTube video ID extraction
+function getYoutubeVideoId(url) {
+  if (!url) return null;
+  
+  // Handle various YouTube URL formats
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  
+  // Return the video ID if found
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Play video in modal
+function playVideo(url, title) {
+  const videoModal = new bootstrap.Modal(document.getElementById("videoModal"));
+  const videoFrame = document.getElementById("videoFrame");
+  
+  // Clear any previous source first
+  videoFrame.src = '';
+  
+  // Check if it's a playlist URL
+  if (url.includes('list=')) {
+    // Extract playlist ID
+    const playlistMatch = url.match(/list=([^&]+)/);
+    if (playlistMatch && playlistMatch[1]) {
+      const playlistId = playlistMatch[1];
+      videoFrame.src = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;
+      videoModal.show();
+      return;
+    }
+  }
+  
+  // Otherwise, handle as a regular video
+  const videoId = getYoutubeVideoId(url);
+  
+  if (videoId) {
+    videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+  } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    console.error('Could not extract YouTube video ID from:', url);
+    videoFrame.src = 'about:blank'; // Prevent loading invalid URL
+  } else {
+    videoFrame.src = url;
+  }
+  
+  videoModal.show();
+}
+
+function setupCardInteractions() {
+  document.querySelectorAll(".video-item").forEach((card) => {
+    const overlay = card.querySelector(".overlay-element");
+    
+    // Hover effects
+    card.addEventListener("mouseenter", () => {
+      overlay.style.opacity = "1";
+      card.style.transform = "translateY(-3px)";
+    });
+
+    card.addEventListener("mouseleave", () => {
+      overlay.style.opacity = "0";
+      card.style.transform = "translateY(0)";
+    });
+    
+    // Click to play video
+    card.addEventListener("click", (e) => {
+      if (!e.target.closest('.btn')) {
+        const url = card.dataset.videoUrl;
+        const title = card.dataset.videoTitle;
+        playVideo(url, title);
       }
     });
-  }, {
-    rootMargin: "200px 0px", // Start loading images when they're 200px from entering viewport
-    threshold: 0.01
   });
-
-  // Apply observer to all lazy images
-  document.querySelectorAll('.lazy-image').forEach(img => {
-    lazyImageObserver.observe(img);
-  });
-}
-
-function setupTabEventListeners() {
-  const tabTriggers = document.querySelectorAll('[data-bs-toggle="pill"]');
-
-  tabTriggers.forEach((tabTrigger) => {
-    tabTrigger.addEventListener("click", function() {
-      // Remove active class from all tabs
-      tabTriggers.forEach((tab) => {
-        tab.classList.remove("active");
+  
+  // Add active tab listener
+  const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
+  tabButtons.forEach((tab) => {
+    tab.addEventListener('shown.bs.tab', function() {
+      // Update tab styles
+      tabButtons.forEach(btn => {
+        if (btn.classList.contains('active')) {
+          btn.style.backgroundColor = 'white';
+          btn.style.color = 'black';
+        } else {
+          btn.style.backgroundColor = 'transparent';
+          btn.style.color = 'white';
+        }
       });
-
-      // Add active class to clicked tab
-      this.classList.add("active");
-
-      // Scroll active tab into view
-      setTimeout(() => {
-        this.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "center",
-        });
-      }, 100);
       
-      // Trigger lazy loading check when changing tabs
-      setTimeout(() => {
-        window.dispatchEvent(new Event('scroll'));
-      }, 200);
+      // Scroll active tab into view on desktop only
+      if (window.innerWidth >= 768) {
+        setTimeout(() => {
+          tab.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center"
+          });
+        }, 100);
+      }
     });
   });
 }
 
 // Init on DOM load
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize animations
-  AOS.init({
-    duration: 600,
-    easing: "ease-out",
-    once: true,
-    offset: 50
-  });
+  // Initialize animations if AOS exists
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 600,
+      easing: "ease-out",
+      once: true,
+      offset: 50
+    });
+  }
 
   createVideoGallery();
-  setupTabEventListeners();
+  
+  // Make playVideo global
+  window.playVideo = playVideo;
+  
+  // Set dark background if not already set
+  document.body.style.backgroundColor = document.body.style.backgroundColor || "black";
+  document.body.style.color = document.body.style.color || "white";
+  
+  // Font style - Using Poppins font
+  const fontLink = document.createElement('link');
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap';
+  fontLink.rel = 'stylesheet';
+  document.head.appendChild(fontLink);
+  
+  // Apply Poppins font to all elements
+  document.body.style.fontFamily = "'Poppins', sans-serif";
 
-  // Ensure first tab is scrolled into view
-  setTimeout(() => {
-    const firstTab = document.querySelector(".nav-link.active");
-    if (firstTab) {
-      firstTab.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
-  }, 300);
-
-  // Handle custom cursor if it exists
-  const cursorOuter = document.getElementById("cursor-outer");
-  if (cursorOuter) {
-    initCustomCursor();
-  }
+  // Add container for tabs for better mobile layout
+  const tabWrapper = document.createElement("div");
+  tabWrapper.className = "container-fluid px-0";
+  videoTabs.parentNode.insertBefore(tabWrapper, videoTabs);
+  tabWrapper.appendChild(videoTabs);
+  
+  // Add resize handler to adjust layout if needed
+  window.addEventListener("resize", function() {
+    const isMobile = window.innerWidth < 768;
+    
+    // Additional mobile-specific adjustments can be added here if needed
+    document.querySelectorAll('#videoTabs .nav-link').forEach(button => {
+      // Equal width buttons on mobile, variable on desktop
+      button.style.width = isMobile ? "100%" : "auto";
+    });
+  });
+  
+  // Trigger resize once to apply initial settings
+  window.dispatchEvent(new Event('resize'));
+  
+  // Add tabindex to body to make it focusable for accessibility
+  document.body.setAttribute("tabindex", "-1");
+  document.body.style.outline = "none"; // Hide focus outline on body
 });
-
-// Custom cursor function simplified for performance
-function initCustomCursor() {
-  const cursorOuter = document.getElementById("cursor-outer");
-  const cursorDot = document.getElementById("cursor-dot");
-
-  if (!cursorOuter) return;
-
-  document.addEventListener("mousemove", function(e) {
-    requestAnimationFrame(() => {
-      cursorOuter.style.transform = `translate(${e.clientX - 20}px, ${e.clientY - 20}px)`;
-      if (cursorDot) {
-        cursorDot.style.transform = `translate(${e.clientX - 4}px, ${e.clientY - 4}px)`;
-      }
-    });
-  });
-
-  document.querySelectorAll("a, button, .video-card").forEach((item) => {
-    item.addEventListener("mouseenter", function() {
-      cursorOuter.classList.add("cursor-hover");
-      if (cursorDot) cursorDot.classList.add("dot-hover");
-    });
-
-    item.addEventListener("mouseleave", function() {
-      cursorOuter.classList.remove("cursor-hover");
-      if (cursorDot) cursorDot.classList.remove("dot-hover");
-    });
-  });
-}

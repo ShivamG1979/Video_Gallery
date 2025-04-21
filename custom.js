@@ -46,8 +46,8 @@ function initCustomCursor() {
     // Add event listeners for hover effects
     document.querySelectorAll('a, button, .card, .nav-link, .video-container, .carousel-video-container').forEach(item => {
       item.addEventListener('mouseenter', function() {
-        cursorOuter.style.width = '50px';
-        cursorOuter.style.height = '50px';
+        cursorOuter.style.width = '30px';
+        cursorOuter.style.height = '30px';
         cursorOuter.style.border = '1px solid var(--bs-success)';
         if (cursorDot) {
           cursorDot.style.backgroundColor = 'var(--bs-success)';
@@ -55,8 +55,8 @@ function initCustomCursor() {
       });
       
       item.addEventListener('mouseleave', function() {
-        cursorOuter.style.width = '40px';
-        cursorOuter.style.height = '40px';
+        cursorOuter.style.width = '20px';
+        cursorOuter.style.height = '20px';
         cursorOuter.style.border = '1px solid rgba(255, 255, 255, 0.5)';
         if (cursorDot) {
           cursorDot.style.backgroundColor = 'white';
