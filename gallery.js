@@ -1,7 +1,6 @@
 // DOM elements
 const videoTabs = document.getElementById("videoTabs");
 const videoTabContent = document.getElementById("videoTabContent");
-
 // Create and append video tabs and content
 function createVideoGallery() {
   // Make tabs responsive - horizontal on desktop, column on mobile
@@ -18,6 +17,28 @@ function createVideoGallery() {
   // Create video modal for popup playback
   createVideoModal();
 
+  // Apply global style to remove all button outlines immediately
+  const styleRemoveOutlines = document.createElement('style');
+  styleRemoveOutlines.textContent = `
+    .play-button {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    .play-button:hover, .play-button:active, .play-button:focus, .play-button:focus-visible {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    button.btn.play-button::after, button.btn.play-button::before {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(styleRemoveOutlines);
+  
   videoCategories.forEach((category, categoryIndex) => {
     // Create tab nav item
     const tabItem = document.createElement("li");
@@ -35,12 +56,10 @@ function createVideoGallery() {
       </button>
     `;
     videoTabs.appendChild(tabItem);
-
     // Create content pane
     const contentDiv = document.createElement("div");
     contentDiv.className = `tab-pane fade ${categoryIndex === 0 ? "show active" : ""}`;
     contentDiv.id = `content-${categoryIndex}`;
-
     contentDiv.innerHTML = `
       <div class="mt-2">
         <h1 class="mb-3 ps-2 fs-2 text-light fw-bold">${category.name}</h1>
@@ -63,12 +82,12 @@ function createVideoGallery() {
                        style="background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0) 100%); 
                               opacity: 0; 
                               transition: opacity 0.3s ease;">
-                    <button class="btn border-0 bg-transparent text-white fs-1 play-button"
+                    <div class="text-white fs-1 play-button-container"
                             style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); 
                                    transition: transform 0.3s ease;"
                             onclick="playVideo('${video.url}', '${video.title.replace(/'/g, "\\'")}')">
                       <i class="fas fa-play-circle"></i>
-                    </button>
+                    </div>
                     <h5 class="video-title text-center mt-2">${video.title}</h5>
                   </div>
                 </div>
@@ -80,13 +99,10 @@ function createVideoGallery() {
         </div>
       </div>
     `;
-
     videoTabContent.appendChild(contentDiv);
   });
-
   setupCardInteractions();
 }
-
 function createVideoModal() {
   // Create modal container
   const videoModal = document.createElement("div");
@@ -94,12 +110,13 @@ function createVideoModal() {
   videoModal.id = "videoModal";
   videoModal.tabIndex = "-1";
   videoModal.setAttribute("aria-labelledby", "videoModalLabel");
-  videoModal.setAttribute("aria-hidden", "true");
+  // Don't set aria-hidden attribute explicitly - let Bootstrap handle it
   
   videoModal.innerHTML = `
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content bg-dark border-0 rounded-3">
         <div class="modal-header border-0 p-2">
+          <h5 id="videoModalLabel" class="modal-title visually-hidden">Video Player</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-0">
@@ -111,9 +128,17 @@ function createVideoModal() {
     </div>
   `;
   document.body.appendChild(videoModal);
-
   // Improved modal event handling
   const modalElement = document.getElementById("videoModal");
+  
+  // Fix accessibility when modal is shown
+  modalElement.addEventListener('shown.bs.modal', function() {
+    // Set proper accessibility attributes when modal is shown
+    modalElement.setAttribute('aria-modal', 'true');
+    
+    // Make sure aria-hidden is false (or not present) when modal is active
+    modalElement.removeAttribute('aria-hidden');
+  });
   
   // Enhanced modal closing and cleanup
   modalElement.addEventListener('hidden.bs.modal', function() {
@@ -123,7 +148,7 @@ function createVideoModal() {
       videoFrame.src = '';
     }
     
-    // Force cleanup of modal resources
+    // Fix modal cleanup
     document.body.classList.remove('modal-open');
     
     // Remove any lingering backdrops
@@ -142,7 +167,6 @@ function createVideoModal() {
     }
   });
 }
-
 // Enhanced YouTube video ID extraction
 function getYoutubeVideoId(url) {
   if (!url) return null;
@@ -154,7 +178,6 @@ function getYoutubeVideoId(url) {
   // Return the video ID if found
   return (match && match[2].length === 11) ? match[2] : null;
 }
-
 // Play video in modal with improved handling to prevent hanging
 function playVideo(url, title) {
   try {
@@ -163,19 +186,15 @@ function playVideo(url, title) {
     
     // Get modal element directly
     const modalElement = document.getElementById("videoModal");
-    if (!modalElement) {
-      console.error("Video modal element not found");
-      return;
-    }
-    
     const videoFrame = document.getElementById("videoFrame");
-    if (!videoFrame) {
-      console.error("Video frame element not found");
+    const modalTitle = document.getElementById("videoModalLabel");
+    
+    if (!modalElement || !videoFrame) {
+      console.error("Video modal elements not found");
       return;
     }
     
     // Set modal title if available
-    const modalTitle = document.getElementById("videoModalLabel");
     if (modalTitle && title) {
       modalTitle.textContent = title;
     }
@@ -239,13 +258,16 @@ function playVideo(url, title) {
     } catch (e) {
       console.error("Error showing modal:", e);
       // Fallback if modal instance creation fails
-      jQuery(modalElement).modal('show');
+      if (typeof jQuery !== 'undefined') {
+        jQuery(modalElement).modal('show');
+      } else {
+        console.error("Bootstrap modal and jQuery fallback both failed");
+      }
     }
   } catch (e) {
     console.error("Error in playVideo function:", e);
   }
 }
-
 function setupCardInteractions() {
   const isMobile = () => window.innerWidth < 768;
   let touchedCard = null; // Track which card was touched last
@@ -266,7 +288,20 @@ function setupCardInteractions() {
   
   document.querySelectorAll(".video-item").forEach((card) => {
     const overlay = card.querySelector(".overlay-element");
-    const playButton = card.querySelector(".play-button");
+    const playButton = card.querySelector(".play-button-container");
+    
+    // Make card focusable for keyboard accessibility
+    card.setAttribute('tabindex', '0');
+    
+    // Add keyboard navigation support
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const url = card.dataset.videoUrl;
+        const title = card.dataset.videoTitle;
+        playVideo(url, title);
+      }
+    });
     
     // Desktop: Handle hover effects
     card.addEventListener("mouseenter", () => {
@@ -275,7 +310,6 @@ function setupCardInteractions() {
         card.style.transform = "translateY(-3px)";
       }
     });
-
     card.addEventListener("mouseleave", () => {
       if (!isMobile()) {
         overlay.style.opacity = "0";
@@ -312,7 +346,7 @@ function setupCardInteractions() {
       }
       
       // If tap was on the play button, let the click handler deal with it
-      if (e.target.closest('.play-button')) {
+      if (e.target.closest('.play-button-container')) {
         return;
       }
       
@@ -337,16 +371,18 @@ function setupCardInteractions() {
     }, { passive: true });
     
     // Dedicated handler for play button
-    playButton.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent the card click from firing
-      const url = card.dataset.videoUrl;
-      const title = card.dataset.videoTitle;
-      playVideo(url, title);
-    });
+    if (playButton) {
+      playButton.addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevent the card click from firing
+        const url = card.dataset.videoUrl;
+        const title = card.dataset.videoTitle;
+        playVideo(url, title);
+      });
+    }
     
     // For desktop: Allow clicking anywhere on card to play
     card.addEventListener("click", (e) => {
-      if (!isMobile() && !e.target.closest('.play-button')) {
+      if (!isMobile() && !e.target.closest('.play-button-container')) {
         const url = card.dataset.videoUrl;
         const title = card.dataset.videoTitle;
         playVideo(url, title);
@@ -400,7 +436,6 @@ function setupCardInteractions() {
     });
   });
 }
-
 // Init on DOM load
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize animations if AOS exists
@@ -412,7 +447,6 @@ document.addEventListener("DOMContentLoaded", () => {
       offset: 50
     });
   }
-
   createVideoGallery();
   
   // Make playVideo global
@@ -449,6 +483,58 @@ document.addEventListener("DOMContentLoaded", () => {
       z-index: 1050 !important;
     }
     
+    /* Custom focus styles - Remove blue outline */
+    .video-item:focus {
+      outline: 2px solid #ffffff !important; /* White outline instead of blue */
+      outline-offset: 4px;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4) !important;
+    }
+    
+    button:focus, a:focus, .btn:focus, .nav-link:focus {
+      outline: 2px solid #ffffff !important; /* White outline */
+      box-shadow: none !important; /* Remove Bootstrap's blue outline */
+    }
+    
+    /* Remove all browser default focus outlines */
+    *:focus {
+      outline-color: #ffffff !important; /* White outline instead of blue */
+    }
+    
+    /* Remove all blue button highlights */
+    .btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+      background-color: #333 !important; /* Dark gray instead of blue */
+      border-color: #555 !important;
+    }
+    
+    /* Remove blue from all links */
+    a, a:hover, a:active, a:focus {
+      color: #e0e0e0 !important; /* Light gray instead of blue */
+      text-decoration: underline;
+    }
+    
+    /* Remove borders and outlines from play buttons - EXTREMELY AGGRESSIVE */
+    .play-button-container, 
+    .play-button-container:hover, 
+    .play-button-container:active, 
+    .play-button-container:focus {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+      cursor: pointer;
+    }
+    
+    .play-button-container *,
+    .play-button-container *:hover,
+    .play-button-container *:active,
+    .play-button-container *:focus {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    
     /* Mobile-specific styles */
     @media (max-width: 767px) {
       .video-item {
@@ -468,10 +554,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       /* Make play button more prominent */
-      .video-item .play-button {
+      .video-item .play-button-container {
         font-size: 3rem !important;
         filter: drop-shadow(0 0 10px rgba(0,0,0,0.9)) !important;
+        border: none !important;
+        outline: none !important;
       }
+        
       
       /* Ensure titles are readable */
       .video-item .video-title {
@@ -489,7 +578,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       /* Make play button appear clickable with subtle animation */
-      .video-item.card-active .play-button {
+      .video-item.card-active .play-button-container {
         animation: pulse 1.5s infinite ease-in-out;
       }
       
@@ -498,10 +587,10 @@ document.addEventListener("DOMContentLoaded", () => {
         50% { transform: scale(1.1); }
         100% { transform: scale(1); }
       }
+      
     }
   `;
   document.head.appendChild(styleElement);
-
   // Add container for tabs for better mobile layout
   const tabWrapper = document.createElement("div");
   tabWrapper.className = "container-fluid px-0";
